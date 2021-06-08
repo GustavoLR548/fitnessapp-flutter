@@ -36,7 +36,7 @@ class _MyBottomSheetState extends State<MyBottomSheet> {
               if (value == null) return 'valor não pode ser nulo';
 
               if (value.isEmpty) {
-                return 'O valor da conta não pode ser vazio';
+                return 'O nome do exercício não pode ser vazio';
               }
 
               return null;
