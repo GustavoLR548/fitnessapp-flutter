@@ -27,6 +27,8 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
   double previousMagnitude = 0.0;
   double magnitudeDelta = 0.0;
   int stepsTaken = 0;
+  Timer? _animationTimer;
+  bool isWalking = false;
 
   @override
   void dispose() {
@@ -34,7 +36,6 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
     for (StreamSubscription<dynamic> subscription in _streamSubscriptions) {
       subscription.cancel();
     }
-    _stopWatch.stop();
   }
 
   @override
@@ -93,8 +94,13 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
         (_stopWatch.elapsed.inSeconds % 60).toString().padLeft(2, '0');
   }
 
+  void _endAnimation() {
+    isWalking = false;
+    _animationTimer = null;
+  }
+
   String _stepsTaken() {
-    if (!_stopWatch.isRunning) return this.stepsTaken.toString();
+    if (_isStart) return this.stepsTaken.toString();
     final List<String> accelerometer =
         _accelerometerValues.map((double v) => v.toStringAsFixed(1)).toList();
 
@@ -111,12 +117,16 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
 
     double currMagnitude = abs(sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2)));
 
-    this.magnitudeDelta = currMagnitude - previousMagnitude;
+    this.magnitudeDelta = log((currMagnitude - previousMagnitude) + 1);
 
     previousMagnitude = currMagnitude;
 
-    if (this.magnitudeDelta > walking) stepsTaken++;
-
+    if (this.magnitudeDelta > walking) {
+      stepsTaken++;
+      isWalking = true;
+      if (_animationTimer != null) _animationTimer?.cancel();
+      _animationTimer = Timer(Duration(seconds: 2), _endAnimation);
+    }
     return this.stepsTaken.toString();
   }
 
@@ -131,9 +141,6 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
   }
 
   Widget _buildBody() {
-    final List<String> accelerometer = _userAccelerometerValues
-        .map((double v) => v.toStringAsFixed(1))
-        .toList();
     return Column(
       children: [
         Expanded(
@@ -145,6 +152,16 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
             ),
           ),
         ),
+        FittedBox(
+            fit: BoxFit.none,
+            child: Icon(
+              _isStart
+                  ? Icons.stop
+                  : isWalking
+                      ? Icons.directions_walk
+                      : Icons.accessibility_new,
+              size: 60,
+            )),
         Expanded(
           child: FittedBox(
             fit: BoxFit.none,
@@ -157,17 +174,24 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
         Center(
           child: Column(
             children: [
-              Text('Accelerometer: ' + magnitudeDelta.toString()),
-              Text('Accelerometer: ' + accelerometer.toString()),
-              ElevatedButton.icon(
-                icon: Icon(_isStart ? Icons.play_arrow : Icons.stop),
-                label: Text(_isStart ? 'Começar' : 'Parar'),
+              RawMaterialButton(
+                child: Icon(_isStart ? Icons.play_arrow : Icons.stop),
                 onPressed: _startStopButtonPressed,
+                padding: const EdgeInsets.all(15.0),
+                shape: CircleBorder(),
+                fillColor: Colors.blue,
               ),
-              ElevatedButton(
-                child: const Text('Finalizar'),
-                onPressed: _endExercise,
+              SizedBox(
+                height: 25,
               ),
+              if (_stopwatchText != '00:00:00')
+                ElevatedButton(
+                  child: const Text('Finalizar'),
+                  onPressed: _endExercise,
+                ),
+              SizedBox(
+                height: 25,
+              )
             ],
           ),
         ),

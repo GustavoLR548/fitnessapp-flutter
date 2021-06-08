@@ -43,7 +43,7 @@ class ExercisesListView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Exercícios'),
+        title: const Text('Meu Pedômetro'),
       ),
       body: _buildBody(context),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -85,27 +85,33 @@ class ExercisesListView extends StatelessWidget {
                 itemCount: exercises.size,
                 shrinkWrap: true,
                 scrollDirection: Axis.vertical,
-                itemBuilder: (context, index) => ListTile(
-                  onTap: () => Navigator.of(context).pushNamed(
-                      ExerciseDetails.routeName,
-                      arguments: exercises.items[index].id),
-                  trailing: IconButton(
-                    icon: Icon(
-                      Icons.delete,
-                      color: Colors.red,
+                itemBuilder: (context, index) => Card(
+                  elevation: 6,
+                  child: ListTile(
+                    onTap: () => Navigator.of(context).pushNamed(
+                        ExerciseDetails.routeName,
+                        arguments: exercises.items[index].id),
+                    trailing: IconButton(
+                      icon: Icon(
+                        Icons.delete,
+                        color: Colors.red,
+                      ),
+                      onPressed: () async =>
+                          await Provider.of<Exercises>(context, listen: false)
+                              .delete(exercises.items[index].id),
                     ),
-                    onPressed: () async =>
-                        await Provider.of<Exercises>(context, listen: false)
-                            .delete(exercises.items[index].id),
-                  ),
-                  leading: CircleAvatar(
-                    backgroundColor: Colors.white,
-                    child: FittedBox(
-                      fit: BoxFit.cover,
-                      child: Text(exercises.items[index].dateDay),
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.white,
+                      child: FittedBox(
+                        child: Text(
+                          exercises.items[index].dateDay,
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
                     ),
+                    title: Text(exercises.items[index].name),
                   ),
-                  title: Text(exercises.items[index].name),
                 ),
               ));
   }
